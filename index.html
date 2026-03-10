@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Iron Dome – 3D Simulation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            mono: ['IBM Plex Mono', 'monospace'],
+          },
+          colors: {
+            bisbg: '#181818',
+            bistxt: '#ffe066',
+            bisborder: '#ffe066',
+            bisaccent: '#fffbe6',
+            bisbtn: '#181818',
+            bisbtnhover: '#ffe066',
+            bisbtntext: '#ffe066',
+            bisbtnhovertext: '#181818',
+          },
+          boxShadow: {
+            'bis-glow': '0 0 8px 2px #ffe06688',
+          },
+        },
+      },
+    }
+  </script>
+
+<style>
+body{
+font-family:'IBM Plex Mono',monospace;
+background:#181818;
+color:#ffe066;
+letter-spacing:0.03em;
+text-shadow:0 0 2px #ffe06688;
+}
+
+.bis-panel{
+background:#181818;
+border:2px solid #ffe066;
+color:#ffe066;
+box-shadow:0 0 8px 2px #ffe06633;
+padding:.75rem 1.25rem;
+margin-bottom:1.25rem;
+}
+
+.bis-btn{
+background:#181818;
+color:#ffe066;
+border:2px solid #ffe066;
+text-transform:uppercase;
+letter-spacing:.08em;
+padding:.5rem 1.2rem;
+}
+
+.bis-btn:hover{
+background:#ffe066;
+color:#181818;
+}
+
+.bis-input{
+background:#181818;
+color:#ffe066;
+border:2px solid #ffe066;
+padding:.3rem .7rem;
+}
+
+.bis-label{
+font-size:.95rem;
+}
+
+.bis-title{
+font-size:1.15rem;
+font-weight:bold;
+text-transform:uppercase;
+letter-spacing:.08em;
+margin-bottom:.7rem;
+}
+
+.bis-hr{
+border-top:2px solid #ffe066;
+margin:1rem 0;
+}
+</style>
+</head>
+
+<body class="m-0 overflow-hidden bg-bisbg text-bistxt font-mono">
+
+<div id="ui-panel" class="bis-panel absolute top-4 left-4 w-[420px] max-h-[95vh] flex flex-col">
+
+<h3 class="bis-title border-b-2 border-bisborder pb-2 mb-4">
+INTERCEPTION SIMULATION
+</h3>
+
+<div class="flex-1 overflow-y-auto pr-2">
+
+<!-- TARGET -->
+<div class="mb-4">
+<button class="w-full flex items-center justify-between bis-btn mb-2" onclick="toggleSection('target-section')">
+<span class="bis-label text-lg">TARGET (MISSILE)</span>
+<span id="target-arrow">▼</span>
+</button>
+
+<div id="target-section" class="space-y-3">
+
+<label class="bis-label block">
+Initial velocity (m/s)
+<input type="number" id="targetSpeed" value="900" class="bis-input w-full mt-1">
+</label>
+
+<label class="bis-label block">
+Launch angle (°)
+<input type="number" id="targetAngle" value="35" class="bis-input w-full mt-1">
+</label>
+
+<label class="bis-label block">
+Mass (kg)
+<input type="number" id="targetMass" value="1200" class="bis-input w-full mt-1">
+</label>
+
+<label class="bis-label block">
+Drag coefficient Cd
+<input type="number" id="targetCd" value="0.15" class="bis-input w-full mt-1">
+</label>
+
+<label class="bis-label block">
+Cross-sectional area S (m²)
+<input type="number" id="targetArea" value="0.8" class="bis-input w-full mt-1">
+</label>
+
+</div>
+</div>
+
+<hr class="bis-hr">
+
+<!-- INTERCEPTOR -->
+<div class="mb-4">
+
+<button class="w-full flex items-center justify-between bis-btn mb-2" onclick="toggleSection('interceptor-section')">
+<span class="bis-label text-lg">INTERCEPTOR</span>
+<span id="interceptor-arrow">▼</span>
+</button>
+
+<div id="interceptor-section" class="space-y-3">
+
+<label class="bis-label block">
+Mass (kg)
+<input type="number" id="mass" value="400" class="bis-input w-full mt-1">
+</label>
+
+<label class="bis-label block">
+Drag coefficient Cd
+<input type="number" id="cd" value="0.2" class="bis-input w-full mt-1">
+</label>
+
+<label class="bis-label block">
+Cross-sectional area S (m²)
+<input type="number" id="area" value="0.4" class="bis-input w-full mt-1">
+</label>
+
+<label class="bis-label block">
+Thrust force (N)
+<input type="number" id="thrust" value="30000" class="bis-input w-full mt-1">
+</label>
+
+<label class="bis-label block">
+Burn time (s)
+<input type="number" id="burn" value="60" class="bis-input w-full mt-1">
+</label>
+
+<label class="bis-label block">
+Initial velocity (m/s)
+<input type="number" id="v0" value="1" class="bis-input w-full mt-1">
+</label>
+
+<label class="bis-label block">
+Kill radius (m)
+<input type="number" id="killRadius" value="20" class="bis-input w-full mt-1">
+</label>
+
+<label class="bis-label block">
+Max corrections
+<input type="number" id="maxCorrections" value="900000" class="bis-input w-full mt-1">
+</label>
+
+<label class="bis-label block">
+Maneuverability (°/s)
+<input type="number" id="maneuverability" value="280" class="bis-input w-full mt-1">
+</label>
+
+</div>
+</div>
+
+<hr class="bis-hr">
+
+<!-- PHYSICS -->
+<div class="mb-4">
+
+<button class="w-full flex items-center justify-between bis-btn mb-2" onclick="toggleSection('physics-section')">
+<span class="bis-label text-lg">ATMOSPHERE & PHYSICS</span>
+<span id="physics-arrow">▼</span>
+</button>
+
+<div id="physics-section" class="space-y-3">
+
+<label class="bis-label block">
+Atmosphere model
+<select id="atmosphereModel" class="bis-input w-full mt-1">
+<option value="exponential">Exponential (barometric)</option>
+<option value="none">No atmosphere (vacuum)</option>
+</select>
+</label>
+
+<label class="bis-label block">
+Atmosphere height (m)
+<input type="number" id="atmosphereHeight" value="9000" class="bis-input w-full mt-1">
+</label>
+
+<label class="bis-label block">
+Sea-level density (kg/m³)
+<input type="number" id="rho0" value="1.225" class="bis-input w-full mt-1">
+</label>
+
+<label class="bis-label block">
+Gravity (m/s²)
+<input type="number" id="gravity" value="9.81" class="bis-input w-full mt-1">
+</label>
+
+</div>
+</div>
+
+<div class="mt-6 pt-6 border-t-2 border-bisborder space-y-3">
+
+<div class="flex space-x-3">
+<button id="startBtn" class="bis-btn flex-1">🚀 LAUNCH TARGET</button>
+<button id="pauseBtn" class="bis-btn flex-1">⏸ PAUSE</button>
+</div>
+
+<button id="launchInterceptor" disabled class="bis-btn w-full">
++ LAUNCH INTERCEPTOR
+</button>
+
+<button id="resetBtn" class="bis-btn w-full">
+↺ RESET SIMULATION
+</button>
+
+</div>
+</div>
+
+<div id="stats-panel" class="bis-panel absolute top-4 right-4 w-[340px] text-sm">
+
+<h3 class="bis-title border-b-2 border-bisborder pb-2 mb-4">
+STATISTICS
+</h3>
+
+<div class="space-y-2">
+
+<div class="flex justify-between">
+<span class="bis-label">Time:</span>
+<span id="target-time">0.0 s</span>
+</div>
+
+<div class="flex justify-between">
+<span class="bis-label">Target altitude:</span>
+<span id="target-height">0 m</span>
+</div>
+
+<div class="flex justify-between">
+<span class="bis-label">Target velocity:</span>
+<span id="target-velocity">0 m/s</span>
+</div>
+
+<div class="flex justify-between">
+<span class="bis-label">Hit probability:</span>
+<span id="hit-chance">-</span>
+</div>
+
+<div class="flex justify-between">
+<span class="bis-label">Distance:</span>
+<span id="target-distance">0 m</span>
+</div>
+
+<div class="flex justify-between">
+<span class="bis-label">Active interceptors:</span>
+<span id="active-interceptors">0</span>
+</div>
+
+</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="simulation.js"></script>
+
+<script>
+function toggleSection(sectionId){
+const section=document.getElementById(sectionId);
+const arrow=document.getElementById(sectionId.replace('section','arrow'));
+
+if(section.style.display==='none'){
+section.style.display='block';
+arrow.style.transform='rotate(0deg)';
+}else{
+section.style.display='none';
+arrow.style.transform='rotate(-90deg)';
+}
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+const sections=['target-section','interceptor-section','physics-section'];
+
+sections.forEach(s=>{
+const el=document.getElementById(s);
+if(el){el.style.display='none'}
+});
+});
+</script>
+
+</body>
+</html>
